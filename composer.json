@@ -1,0 +1,12 @@
+{
+    "name": "composer/sqltranslator",
+    "description": "SQL Maker",
+    "keywords": ["sql", "create"],
+    "authors": [
+        {
+            "name": "frank",
+            "email": "it.0350@163.com"
+        }
+    ],
+    "require": {}
+}
