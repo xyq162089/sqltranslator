@@ -3,6 +3,7 @@
     "type": "library",
     "description": "SQL Maker",
     "keywords": ["sql", "create"],
+    "license": "BSD-2-Clause",
     "authors": [
         {
             "name": "frank",
