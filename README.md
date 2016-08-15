@@ -1,4 +1,5 @@
 # sqltranslator
-sqltranslator
 -------------
 # SQL生成助手！
+## 更新日志
++ 2016-08-15 创建项目
