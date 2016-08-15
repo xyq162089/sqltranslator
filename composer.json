@@ -1,5 +1,5 @@
 {
-    "name": "composer/sqltranslator",
+    "name": "sql-translator",
     "description": "SQL Maker",
     "keywords": ["sql", "create"],
     "authors": [
