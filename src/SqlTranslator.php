@@ -2,13 +2,6 @@
 
 namespace SqlTranslator;
 
-use SqlTranslator\Plugin\Select;
-use SqlTranslator\Plugin\SelectOracle;
-use SqlTranslator\Plugin\Insert;
-use SqlTranslator\Plugin\Update;
-use SqlTranslator\Plugin\Delete;
-use SqlTranslator\Plugin\Expr;
-
 class SqlTranslator extends DatabaseAbstract
 {
     /**
@@ -89,9 +82,11 @@ class SqlTranslator extends DatabaseAbstract
             case 'insert' :
             case 'update' :
             case 'select' :
-            case 'selectOracle' :
+            case 'select_oracle' :
             case 'delete' :
-                $instance = new $method ();
+                include_once(__DIR__.'/plugin/'.$method.'.php');
+                $classname = 'SqlTranslator\\Plugin\\'. $method;
+                $instance = new $classname();
                 break;
         }
 
