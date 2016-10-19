@@ -28,13 +28,13 @@ class Database
     /**
      * 支持的数据库引擎
      */
-    private $_engines = array('oracle', 'mysql', 'pdo');
+    private $_engines = ['oracle', 'mysql', 'pdo'];
 
     /**
-     * 当前数据库引擎
+     * 当前数据库配置
      *
      */
-    private $_engine = '';
+    private $_config = '';
 
     /**
      * 数据库类型
@@ -96,31 +96,32 @@ class Database
      * 数据库实例
      * @var unknown_type
      */
-    static $_db_pick = array();
+    protected static $_db_pick = [];
 
 
-    function engine($engine = '')
+    public function config($config = '')
     {
-    	if ($engine) {
-    		$this->_engine = $engine;
-    	} else {
-    		return $this->_engine;
-    	}
+        if ($config) {
+            $this->_config = $config;
+        }
+        return $this;
 
     }
+
     /**
      * 取得已设置的数据库连接对象实例
      *
      * @access public
-     * @param string $drivername
+     * @param string $database
      * @return object
      */
-    function pick($database = 'default')
+    public function pick($database = 'pdo')
     {
         Timer::setTimezone();
-        if (!array_key_exists($database, self::$_db_pick)){
-        	self::$_db_pick[$database] = $this->_getInstance($database);
+        if (!array_key_exists($database, self::$_db_pick)) {
+            self::$_db_pick[$database] = $this->_getInstance($database);
         }
+
         return self::$_db_pick[$database];
     }
 
@@ -128,51 +129,47 @@ class Database
      * 获取数据库实例
      *
      * @access private
-     * @param string $engine
-     * @param string $database
+     * @param string $database 数据库引擎
      * @return mixed
      */
     private function _getInstance($database)
     {
-    	if ($this->_engine == 'pdo'
-    	        && !class_exists($this->_engine, false)) {
-    	    return null;
-    	} elseif ($class = Loader::Instance('>\\SqlTranslator\\Lib\\'. ucfirst($database))) {
-    		if ($instance = $class->connect($database)) {
-    		    return $instance;
-    	    }
-    	}
-    	return null;
+        if ($class = Loader::Instance('>\\SqlTranslator\\Lib\\' . ucfirst($database))) {
+            if ($instance = $class->connect($this->_config)) {
+                return $instance;
+            }
+        }
+
+        return null;
     }
 
     /**
      * 解析连接
-     * @param string $database
      * @throws \SqlTranslator\DatabaseException
      */
-    function AnalyseConnect($database)
+    function AnalyseConnect($config)
     {
-        $config = 'mysql://root:w88123@172.16.35.128:3306/lvcheng';
-        $config = parse_url($config);
-        $this->_type = $config['scheme'];
-        $this->_host = $config['host'];
-        $this->_name = trim($config['path'], '/');
-        $this->_user = $config['user'];
-        $this->_pass = $config['pass'];
-        $this->_port = $config['port'];
+        if ($config) {
+            $config      = parse_url($config);
+            $this->_type = $config['scheme'];
+            $this->_host = $config['host'];
+            $this->_name = trim($config['path'], '/');
+            $this->_user = $config['user'];
+            $this->_pass = $config['pass'];
+            $this->_port = $config['port'];
+        } else {
+            throw new DatabaseException('database_config_missing');
+        }
     }
 
-	function __get($name)
-	{
-		list ($database,$engine) = explode('_', $name);
-		$database || $database = 'default';
-		$engine || $engine = 'oracle';
-		if (!in_array($engine, $this->_engines)) {
-			throw new DatabaseException('database_engine_missing', $engine);
-		}
-        $this->engine($engine);
-        return $this->pick($database);
-	}
+    function __get($engine)
+    {
+        if (!in_array($engine, $this->_engines)) {
+            throw new DatabaseException('database_engine_missing', $engine);
+        }
+
+        return $this->pick($engine);
+    }
 }
 
 

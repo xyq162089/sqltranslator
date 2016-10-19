@@ -14,14 +14,13 @@ class Pdo extends Database
 
 	/**
 	 * 连接数据库
-	 *
+	 * @param string $config
 	 * @access public
-	 * @param string $database
 	 * @return object
 	 */
-	function connect($database = 'default')
+	function connect($config)
 	{
-		parent::AnalyseConnect($database);
+		parent::AnalyseConnect($config);
         $options = array(
             \PDO::ATTR_ERRMODE       => \PDO::ERRMODE_EXCEPTION,
             \PDO::ATTR_ORACLE_NULLS  => \PDO::NULL_EMPTY_STRING,

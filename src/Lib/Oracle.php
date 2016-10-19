@@ -1,29 +1,34 @@
 <?php
 namespace SqlTranslator;
 
-class BMode_database_oracle extends BMode_database
+use SqlTranslator\Database;
+use SqlTranslator\DIDatabase;
+use SqlTranslator\Loader;
+use SqlTranslator\Timer;
+use SqlTranslator\Trace;
+use SqlTranslator\DatabaseException;
+
+class Oracle extends Database
 {
 
-    function __construct() {}
     /**
      * 连接数据库
-     *
-     * @access public
-     * @param string $database
-     * @return object
+     * @param $config
+     * @return Oracle_instance
+     * @throws \SqlTranslator\DatabaseException
      */
-    function connect($database = 'default')
+    function connect($config)
     {
-        parent::AnalyseConnect($database);
+        parent::AnalyseConnect($config);
         if (!function_exists('oci_connect')) {
-            throw new BDatabaseException('Could not find driver.');
+            throw new DatabaseException('Could not find driver.');
         }
-        return new BMode_database_oracle_instance($this->_user, $this->_pass, $this->_host);
+        return new Oracle_instance($this->_user, $this->_pass, $this->_host);
     }
 
 }
 
-class BMode_database_oracle_instance implements DIDatabase, BIProxy
+class Oracle_instance implements \SqlTranslator\DIDatabase
 {
     /**
      * 连接对象实例
@@ -89,14 +94,15 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     function __construct($user, $pass, $config)
     {
         // 记录开始执行时间
-        B::i()->plugin->trace->time('SqlQueryStartTime');
-        BTimer::Mark(TIMER_PI_DB_CONNECT_BEGIN);
+        $trace = new Trace();
+        $trace->time('SqlQueryStartTime');
+        Timer::Mark('TIMER_PI_DB_CONNECT_BEGIN');
         $this->_instance || $this->_instance = oci_connect($user, $pass, $config, $this->_encoding);
         if (!$this->_instance) {
-            throw new BDatabaseException('Could not connect to database.');
+            throw new DatabaseException('Could not connect to database.');
         }
         //$this->_instance || $this->_instance = oci_pconnect($user, $pass, $config, $this->_encoding);
-        BTimer::Mark(TIMER_PI_DB_CONNECT_END);
+        Timer::Mark('TIMER_PI_DB_CONNECT_END');
     }
 
     /**
@@ -126,7 +132,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     function _query($sql)
     {
         $this->_sql = $sql = (string)$sql;
-    	BTimer::Mark(TIMER_PI_DB_QUERY_BEGIN);
+    	Timer::Mark('TIMER_PI_DB_QUERY_BEGIN');
         if (strpos($sql, ':')!== false && func_num_args() > 1) {
              preg_match('/\'(\:[A-Za-z]+)\'/i', $sql, $flag);
              $flag = $flag[1];
@@ -137,8 +143,8 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
              $data && oci_bind_by_name($this->_resource, $flag, $data, strlen($data));
              oci_execute($this->_resource, $this->_executeMode);
         }
-        BTimer::Mark(TIMER_PI_DB_QUERY_END);
-        BTrace::Set(TRACE_NAME_DATABASE, array($sql, sprintf('%.4f', BTimer::Last())));
+        Timer::Mark('TIMER_PI_DB_QUERY_END');
+        Trace::Set('TRACE_NAME_DATABASE', array($sql, sprintf('%.4f', Timer::Last())));
         $this->_catch($sql, $this->_resource);
         self::$_rowcount = oci_num_rows($this->_resource);
         return $this->_resource;
@@ -149,7 +155,6 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
      *
      * @access public
      * @param string $sql
-     * @param string $data
      * @return int
      */
     function query($sql)
@@ -163,12 +168,13 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
         $this->_query($sql, $data);
         return $this->rowCount();
     }
+
     /**
      * 执行带返回值的操作
-     *
-     * @access public
      * @param string $sql
-     * @return array
+     * @param int $offset
+     * @param int $limit
+     * @return mixed
      */
     function fetchAll($sql, $offset = 0, $limit = -1)
     {
@@ -241,18 +247,17 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     }
 
     /**
-    * 设置或获取当前数据库的取值模式
-    *
-    * @access public
-    * @param int $fetchMode
-    * @param mixed
-    */
+     * 设置或获取当前数据库的取值模式
+     * @param null $mode
+     * @return $this
+     * @throws \SqlTranslator\DatabaseException
+     */
     function fetchMode($mode = null)
     {
         if (is_null($mode)) {
             return $this->_fetchMode;
         } elseif (!isset($this->_fetch_modes[$mode])) {
-            throw new BDatabaseException('mode_unsupported');
+            throw new DatabaseException('mode_unsupported');
         }
         $this->_fetchMode = $this->_fetch_modes[$mode];
         return $this;
@@ -265,8 +270,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
      */
     function cache($expire = 86400, $engine = 'memcached')
     {
-    	$this->_proxy = new BProxy($engine);
-        return $this->_proxy->adapter($this, $expire);
+        return '';
     }
 
     /**
@@ -281,7 +285,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
         if (is_null($mode)) {
             return $this->_executeMode;
         } elseif (!isset($this->_executeModes[$mode])) {
-            throw new BDatabaseException('mode_unsupported');
+            throw new DatabaseException('mode_unsupported');
         }
         $this->_executeMode = $this->_executeModes[$mode];
         return $this;
@@ -296,7 +300,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     function beginTransaction()
     {
         if (self::$_begin_action) {
-            throw new BDatabaseException('call_transaction_irregular');
+            throw new DatabaseException('call_transaction_irregular');
         }
         $this->executeMode('DEFAULT');
         self::$_begin_action = true;
@@ -312,7 +316,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     function commit()
     {
         if (!self::$_begin_action) {
-            throw new BDatabaseException('transaction_no_started');
+            throw new DatabaseException('transaction_no_started');
         }
 
         $query = oci_commit($this->_instance);
@@ -332,7 +336,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     function rollback()
     {
         if (!self::$_begin_action) {
-            throw new BDatabaseException('transaction_no_started');
+            throw new DatabaseException('transaction_no_started');
         }
         $query = oci_rollback($this->_instance);
         if ($query) {
@@ -350,18 +354,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
      */
     function select()
     {
-        return B::i()->plugin->database_oracleSelect;
-    }
-
-    /**
-     * insert助手
-     *
-     * @access public
-     * @return object
-     */
-    function insert()
-    {
-        return B::i()->plugin->database_insert;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Select');
     }
 
     /**
@@ -372,7 +365,18 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
      */
     function delete()
     {
-        return B::i()->plugin->database_delete;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Delete');
+    }
+
+    /**
+     * insert助手
+     *
+     * @access public
+     * @return object
+     */
+    function insert()
+    {
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Insert');
     }
 
     /**
@@ -383,7 +387,7 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
      */
     function update()
     {
-        return B::i()->plugin->database_update;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Update');
     }
 
 
@@ -400,17 +404,16 @@ class BMode_database_oracle_instance implements DIDatabase, BIProxy
     private function _catch($sql = null, $resource)
     {
         if ($e = oci_error($resource)) {
-            B::i()->plugin->trace->save(BPlugin_trace::FILE, BLoader::PathName('./data/log/queryerror.log'), '['.date("Y-m-d H:i:s"). '] ['. $sql . '][MESSAGE:'.$e['message'].']'.PHP_EOL);
-            throw new BDatabaseException( (D_DEBUG || USER_CENSOR || B::$_cli) ? '['.$sql.']'.$e['message'] : 'database_query_failed');
+            throw new DatabaseException( DEBUG ? '['.$sql.']'.$e['message'] : 'database_query_failed');
         }
 
-        if ((D_DEBUG || USER_CENSOR) && !B::$_cli && $sql) {
-        	$trace = B::i()->plugin->trace;
+        if (DEBUG && $sql) {
+        	$trace = new Trace();
         	$trace->time('SqlQueryEndTime');
         	$queryTime = $trace->time('SqlQueryStartTime', 'SqlQueryEndTime');
         	if ($queryTime > 0.07) {
         		$data =  '['.date("Y-m-d H:i:s"). '] QTime:['. $queryTime.'s ]'. 'Sql:[ '.str_replace("\r\n",' ', $sql).' ] '. $_SERVER['REQUEST_URI'] .PHP_EOL;
-        		$trace->save(BPlugin_trace::FILE, null, $data);
+        		$trace->save(Trace::FILE, null, $data);
         	}
         	$trace->record($this->_sql . '[ RunTime: '. $queryTime .' s ]', 'sql');
         	$trace->N('db_query_time', $queryTime);

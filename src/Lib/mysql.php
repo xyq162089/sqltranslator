@@ -2,6 +2,8 @@
 namespace SqlTranslator\Lib;
 
 use SqlTranslator\Database;
+use SqlTranslator\DIDatabase;
+use SqlTranslator\Loader;
 use SqlTranslator\Timer;
 use SqlTranslator\Trace;
 use SqlTranslator\DatabaseException;
@@ -10,13 +12,13 @@ class Mysql extends Database
 {
     /**
      * 连接数据库
-     * @param string $database
+     * @param string $config
      * @return Mysql_instance
      * @throws DatabaseException
      */
-    function connect($database = 'default')
+    function connect($config)
     {
-        parent::AnalyseConnect($database);
+        parent::AnalyseConnect($config);
         if (function_exists('mysql_connect')) {
             $instance = new Mysql_instance($this->_host, $this->_port, $this->_user, $this->_pass, $this->_name);
             $instance = $instance->encoding($this->_encoding)
@@ -352,18 +354,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      */
     function select()
     {
-        return B::i()->plugin->database_select;
-    }
-
-    /**
-     * insert助手
-     *
-     * @access public
-     * @return object
-     */
-    function insert()
-    {
-        return B::i()->plugin->database_insert;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Select');
     }
 
     /**
@@ -374,7 +365,18 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      */
     function delete()
     {
-        return B::i()->plugin->database_delete;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Delete');
+    }
+
+    /**
+     * insert助手
+     *
+     * @access public
+     * @return object
+     */
+    function insert()
+    {
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Insert');
     }
 
     /**
@@ -385,7 +387,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      */
     function update()
     {
-        return B::i()->plugin->database_update;
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Update');
     }
 
     /**
@@ -397,10 +399,6 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
     private function _catch($sql = null)
     {
         if (mysql_errno()) {
-            B::i()->plugin->trace->save(
-                BPlugin_trace::FILE, BLoader::PathName('./data/log/queryerror.log'),
-                '[' . date("Y-m-d H:i:s") . '] [' . $sql . '][MESSAGE:' . mysql_error() . ']' . PHP_EOL
-            );
             throw new DatabaseException(
                 DEBUG ? ('[' . date("Y-m-d H:i:s") . '] [' . $sql . ']<br />[MESSAGE:' . mysql_error(
                     ) . ']') : 'database_query_failed'

@@ -5,7 +5,6 @@ use SqlTranslator\Loader;
 
 class DatabaseException extends \Exception
 {
-
     /**
      * 构造函数
      */
@@ -15,13 +14,16 @@ class DatabaseException extends \Exception
     	$message = $args[0];
 
         if (preg_match('/^[a-z_A-Z\d]+$/', $message)) {
-            $package = Loader::Import('>/Exception/cn');var_dump($package);exit;
-            isset($package[$message]) && $message = $package[$message];
+            $package = require(Loader::PathName('>\\Exception\\cn')['path']);
+
+            array_key_exists($message, $package) && $message = $package[$message];
         }
         if (count($args) > 1) {
             array_shift($args);
             $message = vsprintf($message, $args);
         }
+        echo $message;
+        exit;
         parent::__construct($message);
     }
 
@@ -48,7 +50,7 @@ class DatabaseException extends \Exception
     public static function Report()
     {
         //抛错误级别
-        if (D_DEBUG) {
+        if (DEBUG) {
             ini_set('display_errors', '1');
             error_reporting(E_ALL^E_NOTICE^E_WARNING);
         } else {
@@ -78,7 +80,7 @@ class DatabaseException extends \Exception
      * @param string $templatefile
      * @return string
      */
-    private static function _Display(Exception $e)
+    private static function _Display($message)
     {
     	$trace = $e->getTrace();
         $trace = array_shift($trace);
@@ -123,7 +125,7 @@ class DatabaseException extends \Exception
             //写日志
 
         }
-        return $no_debug_content;
+        return $debug_content;
     }
 
 }
