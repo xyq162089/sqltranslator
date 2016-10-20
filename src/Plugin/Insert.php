@@ -1,7 +1,7 @@
 <?php
-namespace sqltranslator\plugin;
+namespace SqlTranslator\Plugin;
 
-use sqltranslator\SqlTranslator;
+use SqlTranslator\SqlTranslator;
 
 class Insert extends SqlTranslator
 {

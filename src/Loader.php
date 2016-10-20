@@ -1,7 +1,7 @@
 <?php
-namespace sqltranslator;
+namespace SqlTranslator;
 
-use sqltranslator\DatabaseException;
+use SqlTranslator\DatabaseException;
 
 class Loader
 {

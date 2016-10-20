@@ -1,9 +1,9 @@
 <?php
-namespace sqltranslator\plugin;
+namespace SqlTranslator\Plugin;
 
-use sqltranslator\SqlTranslator;
+use SqlTranslator\SqlTranslator;
 
-class SelectOracle extends SqlTranslator
+class Select extends SqlTranslator
 {
 
     const FLAG_SELECT = 'select';
@@ -44,8 +44,6 @@ class SelectOracle extends SqlTranslator
 
     const FLAG_OFFSET = 'offset';
 
-    const FLAG_LOCK = 'forupdate';
-
     /**
      * 语句组成部分初始值
      *
@@ -78,8 +76,7 @@ class SelectOracle extends SqlTranslator
         self::FLAG_GROUP => 'GROUP BY',
         self::FLAG_HAVING => 'HAVING',
         self::FLAG_LIMIT => 'LIMIT',
-        self::FLAG_OFFSET => 'OFFSET',
-        self::FLAG_LOCK => 'FOR UPDATE'
+        self::FLAG_OFFSET => 'OFFSET'
     ];
 
     /**
@@ -133,7 +130,7 @@ class SelectOracle extends SqlTranslator
      */
     function from($table, $columns = ['*'])
     {
-        $this->_parts[self::FLAG_FROM][] = [$table, (array)$columns];
+        $this->_parts[self::FLAG_FROM][] = [(array)$table, (array)$columns];
 
         return $this;
     }
@@ -199,8 +196,8 @@ class SelectOracle extends SqlTranslator
      */
     function limit($count = 0, $offset = 0)
     {
-        $this->_parts[self::FLAG_LIMIT]  = !$count ?: $count;
-        $this->_parts[self::FLAG_OFFSET] = !$offset ?: $offset;
+        $this->_parts[self::FLAG_LIMIT]  = $count;
+        $this->_parts[self::FLAG_OFFSET] = $offset;
 
         return $this;
     }
@@ -263,17 +260,6 @@ class SelectOracle extends SqlTranslator
     }
 
     /**
-     * 行锁
-     * @return BPlugin_database_oracleSelect
-     */
-    function forupdate()
-    {
-        $this->_parts[self::FLAG_LOCK][] = true;
-
-        return $this;
-    }
-
-    /**
      * 添加联接
      *
      * @access private
@@ -307,49 +293,30 @@ class SelectOracle extends SqlTranslator
             foreach ($_from as $key => $val) {
                 if (is_array($val) && 2 == count($val)) {
                     $_other_name = '';
-                    if (is_array($val[0])) {
-                        $k = key($val[0]);
-                        $v = current($val[0]);
-                    } else {
-                        $k = $v = $val[0];
-                    }
-                    if ($_other_name = $this->wrap($k)) {
-                        $_tmp_tabs .= $this->wrap($v) . ' ' . $_other_name . ', ';
+                    list($k, $v) = each($val[0]);
+                    if (!is_integer($k)) {
+                        $_tmp_tabs .= $this->wrap($v) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap(
+                                $k
+                            ) . ', ';
+                        $_other_name = $this->wrap($k);
                     } else {
                         $_tmp_tabs .= $this->wrap($v) . ', ';
                     }
+
                     foreach ($val[1] as $k => $v) {
                         if (!is_integer($k)) {
-                            $hasSet = false;
-                            if ($_other_name) {
-                                if (strpos($v, 'DISTINCT') === 0) {
-                                    $hasSet     = true;
-                                    $colName    = trim(substr($v, strlen('DISTINCT')));
-                                    $val[1][$k] = 'DISTINCT ' . $_other_name . '.' . $this->wrap(
-                                            $colName
-                                        ) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
-                                    //非函数 以及数据库函数
-                                } elseif (!preg_match('/\w+\(.*?\)/', $v) && !is_object($v)) {
-                                    $hasSet     = true;
-                                    $val[1][$k] = $_other_name . '.' . $this->wrap(
-                                            $v
-                                        ) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
-                                }
-                            }
-
-                            if (!$hasSet) {
+                            if ($_other_name && !preg_match('/\w+\(.*?\)/', $v)) {
+                                $val[1][$k] = $_other_name . '.' . $this->wrap(
+                                        $v
+                                    ) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
+                            } else {
                                 $val[1][$k] = $this->wrap($v) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap(
                                         $k
-                                    );;
+                                    );
                             }
                         } else {
-                            if ($_other_name) {
-                                if (strpos($v, 'DISTINCT') === 0) {
-                                    $colName    = trim(substr($v, strlen('DISTINCT')));
-                                    $val[1][$k] = 'DISTINCT ' . $_other_name . '.' . $this->wrap($colName);
-                                } elseif (!preg_match('/\w+\(.*?\)/', $v) && !is_object($v)) {
-                                    $val[1][$k] = $_other_name . '.' . $this->wrap($v);
-                                }
+                            if ($_other_name  && strpos($v, trim($_other_name, '`').'.') !== 0 && !preg_match('/\w+\(.*?\)/', $v)) {
+                                $val[1][$k] = $_other_name . '.' . $this->wrap($v);
                             }
                         }
                     }
@@ -373,22 +340,19 @@ class SelectOracle extends SqlTranslator
                     $_tmp_tabs   = '';
                     $_tmp_cols   = '';
                     $_other_name = '';
-                    if (is_array($_tables)) {
-                        $k = key($_tables);
-                        $v = current($_tables);
-                    } else {
-                        $k = $v = $_tables;
-                    }
-                    if ($_other_name = $this->wrap($k)) {
-                        $_tmp_tabs .= $this->wrap($v) . ' ' . $_other_name . ', ';
+                    list($k, $v) = each($_tables);
+                    if (!is_integer($k)) {
+                        $_tmp_tabs .= $this->wrap($v) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap(
+                                $k
+                            ) . ', ';
+                        $_other_name = $this->wrap($k);
                     } else {
                         $_tmp_tabs .= $this->wrap($v) . ', ';
                     }
-
                     $_tmp_tabs = trim($_tmp_tabs, ', ');
                     $_tmp_join .= $this->_keys[$_flag] . ' ' . $_tmp_tabs . ' ' . $this->_keys[self::FLAG_ON] . ' ' . $_cond . ' ';
                     foreach ($_columns as $k => $v) {
-                        if (!preg_match('/.*?\(.*?\)/', $v) && !is_object($v)) {
+                        if (!preg_match('/.*?\(.*?\)/', $_columns[$k])) {
                             $_other_name && $_columns[$k] = $_other_name . '.' . $this->wrap($v);
                         }
                         if (!is_integer($k)) {
@@ -435,40 +399,43 @@ class SelectOracle extends SqlTranslator
         if ($_order = $this->_parts[self::FLAG_ORDER]) {
             $_tmp_order = '';
             foreach ($_order as $key => $val) {
-                if (strpos(strtolower($val[0]), ' asc') !== false || strpos(strtolower($val[0]), ' desc') !== false) {
+                if (strpos(strtolower($val[0]), ' asc') !== false || strpos(
+                        strtolower($val[0]), ' desc'
+                    ) !== false || $val[1] == 'none'
+                ) {
                     $_tmp_order .= $val[0] . ', ';
                 } else {
-                    $_tmp_order .= $val[0] . ' ' . ($val[1] == 'none' ? '' : ($val[1] ? $this->_keys[self::FLAG_ASC] : $this->_keys[self::FLAG_DESC])) . ', ';
+                    $_tmp_order .= $val[0] . ' ' . ($val[1] ? $this->_keys[self::FLAG_ASC] : $this->_keys[self::FLAG_DESC]) . ', ';
                 }
             }
             $_order_string = $_tmp_order;
         }
 
         if ($_limit = $this->_parts[self::FLAG_LIMIT]) {
-
-            $_limit_string = $_where_string ? ' rownum <' . $_limit : ' ' . $this->_keys[self::FLAG_WHERE] . ' rownum <' . $_limit;
-        }
-
-        if ($this->_parts[self::FLAG_LOCK]) {
-            $_lock_string = ' ' . $this->_keys[self::FLAG_LOCK];
+            if ($_offset = $this->_parts[self::FLAG_OFFSET]) {
+                $_limit_string = $_limit . ' OFFSET ' . $_offset;
+            } else {
+                $_limit_string = $_limit;
+            }
         }
 
         $_select_string = $_select_string ? $this->_keys[self::FLAG_SELECT] . ' ' . trim($_select_string, ', ') : '';
         $_from_string   = $_from_string ? ' ' . $this->_keys[self::FLAG_FROM] . ' ' . trim($_from_string, ', ') : '';
         $_join_string   = $_join_string ? ' ' . trim($_join_string) : '';
-        $_where_string  = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . rtrim(
-                $_where_string, $this->_keys[self::FLAG_AND] . $this->_keys[self::FLAG_OR] . ' '
+        //$_where_string = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . trim($_where_string, $this->_keys[self::FLAG_AND]. $this->_keys[self::FLAG_OR]. ' ') : '';
+        $_where_string = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . str_replace(
+                [$this->_keys[self::FLAG_AND], $this->_keys[self::FLAG_OR], ' '], '', $_where_string
             ) : '';
 
         $_group_string  = $_group_string ? ' ' . $this->_keys[self::FLAG_GROUP] . ' ' . trim($_group_string, ', ') : '';
-        $_having_string = $_having_string ? ' ' . $this->_keys[self::FLAG_HAVING] . ' ' . rtrim(
+        $_having_string = $_having_string ? ' ' . $this->_keys[self::FLAG_HAVING] . ' ' . trim(
                 $_having_string, $this->_keys[self::FLAG_AND] . $this->_keys[self::FLAG_OR] . ' '
             ) : '';
         $_order_string  = $_order_string ? ' ' . $this->_keys[self::FLAG_ORDER] . ' ' . trim($_order_string, ', ') : '';
-        //$_limit_string = $_where_string ? $_limit_string : ' WHERE ' . $_limit_string;
+        $_limit_string  = $_limit_string ? ' ' . $this->_keys[self::FLAG_LIMIT] . ' ' . $_limit_string : '';
 
         if ($_select_string) {
-            $this->_sql .= $_select_string . $_from_string . $_join_string . $_where_string . $_group_string . $_having_string . $_order_string . $_limit_string . $_lock_string;
+            $this->_sql .= $_select_string . $_from_string . $_join_string . $_where_string . $_group_string . $_having_string . $_order_string . $_limit_string;
         }
 
         return $this->_init();

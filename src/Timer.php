@@ -1,5 +1,5 @@
 <?php
-namespace sqltranslator;
+namespace SqlTranslator;
 
 class Timer
 {

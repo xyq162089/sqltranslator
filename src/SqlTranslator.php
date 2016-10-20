@@ -1,8 +1,8 @@
 <?php
 
-namespace sqltranslator;
+namespace SqlTranslator;
 
-use sqltranslator\Loader;
+use SqlTranslator\Loader;
 
 class SqlTranslator extends DatabaseAbstract
 {
