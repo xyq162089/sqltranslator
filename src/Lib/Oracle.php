@@ -1,12 +1,12 @@
 <?php
-namespace SqlTranslator;
+namespace sqltranslator\lib;
 
-use SqlTranslator\Database;
-use SqlTranslator\DIDatabase;
-use SqlTranslator\Loader;
-use SqlTranslator\Timer;
-use SqlTranslator\Trace;
-use SqlTranslator\DatabaseException;
+use sqltranslator\Database;
+use sqltranslator\DIDatabase;
+use sqltranslator\Loader;
+use sqltranslator\Timer;
+use sqltranslator\Trace;
+use sqltranslator\DatabaseException;
 
 class Oracle extends Database
 {

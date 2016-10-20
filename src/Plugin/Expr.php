@@ -1,7 +1,7 @@
 <?php
-namespace SqlTranslator\Plugin;
+namespace sqltranslator\plugin;
 
-use SqlTranslator\SqlTranslator;
+use sqltranslator\SqlTranslator;
 
 class Expr extends SqlTranslator
 {

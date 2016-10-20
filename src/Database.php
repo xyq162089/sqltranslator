@@ -1,8 +1,8 @@
 <?php
-namespace SqlTranslator;
+namespace sqltranslator;
 
-use SqlTranslator\Loader;
-use SqlTranslator\DatabaseException;
+use sqltranslator\Loader;
+use sqltranslator\DatabaseException;
 
 class Database
 {

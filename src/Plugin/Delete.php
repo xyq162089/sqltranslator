@@ -1,7 +1,7 @@
 <?php
-namespace SqlTranslator\Plugin;
+namespace sqltranslator\plugin;
 
-use SqlTranslator\SqlTranslator;
+use sqltranslator\SqlTranslator;
 
 class Delete extends SqlTranslator
 {
@@ -129,7 +129,7 @@ class Delete extends SqlTranslator
     function _toString()
     {
 
-        $this->_sql = $_from_string = $_where_string = '';
+        $this->_sql = $_tmp_tabs = $_from_string = $_where_string = '';
 
         if ($_from = $this->_parts[self::FLAG_FROM]) {
             foreach ($_from as $key => $val) {
