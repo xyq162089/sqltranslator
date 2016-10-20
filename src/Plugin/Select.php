@@ -1,7 +1,7 @@
 <?php
-namespace SqlTranslator\Plugin;
+namespace sqltranslator\plugin;
 
-use SqlTranslator\SqlTranslator;
+use sqltranslator\SqlTranslator;
 
 class Select extends SqlTranslator
 {
@@ -196,8 +196,8 @@ class Select extends SqlTranslator
      */
     function limit($count = 0, $offset = 0)
     {
-        $this->_parts[self::FLAG_LIMIT]  = !$count ?: $count;
-        $this->_parts[self::FLAG_OFFSET] = !$offset ?: $offset;
+        $this->_parts[self::FLAG_LIMIT]  = $count;
+        $this->_parts[self::FLAG_OFFSET] = $offset;
 
         return $this;
     }
@@ -315,7 +315,7 @@ class Select extends SqlTranslator
                                     );
                             }
                         } else {
-                            if ($_other_name  && strpos($v, $_other_name.'.') !== 0 && !preg_match('/\w+\(.*?\)/', $v)) {
+                            if ($_other_name  && strpos($v, trim($_other_name, '`').'.') !== 0 && !preg_match('/\w+\(.*?\)/', $v)) {
                                 $val[1][$k] = $_other_name . '.' . $this->wrap($v);
                             }
                         }

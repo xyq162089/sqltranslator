@@ -1,8 +1,8 @@
 <?php
-namespace SqlTranslator;
+namespace sqltranslator;
 
-use SqlTranslator\Timer;
-use SqlTranslator\Loader;
+use sqltranslator\Timer;
+use sqltranslator\Loader;
 
 class Trace
 {

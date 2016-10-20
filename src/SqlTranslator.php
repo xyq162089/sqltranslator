@@ -1,8 +1,8 @@
 <?php
 
-namespace SqlTranslator;
+namespace sqltranslator;
 
-use SqlTranslator\Loader;
+use sqltranslator\Loader;
 
 class SqlTranslator extends DatabaseAbstract
 {
@@ -128,9 +128,13 @@ abstract class DatabaseAbstract
      * @param string $col
      * @return string
      */
-    protected function wrap($col)
+    protected function wrap($columns)
     {
-        return $col;
+        if ($columns == '*' || preg_match('/(^#?)([a-zA-Z0-9_\-\.]*)\s*\(([a-zA-Z0-9_\-]*)\)/i', $columns)) {
+            return $columns;
+        }
+
+        return '`' . $columns . '`';
     }
 
 }
