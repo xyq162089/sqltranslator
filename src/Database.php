@@ -5,6 +5,8 @@ use SqlTranslator\Loader;
 use SqlTranslator\Timer;
 use SqlTranslator\DatabaseException;
 
+defined('DEBUG') or define('DEBUG', false);
+
 class Database
 {
 

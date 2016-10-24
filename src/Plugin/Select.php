@@ -422,9 +422,9 @@ class Select extends SqlTranslator
         $_select_string = $_select_string ? $this->_keys[self::FLAG_SELECT] . ' ' . trim($_select_string, ', ') : '';
         $_from_string   = $_from_string ? ' ' . $this->_keys[self::FLAG_FROM] . ' ' . trim($_from_string, ', ') : '';
         $_join_string   = $_join_string ? ' ' . trim($_join_string) : '';
-        //$_where_string = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . trim($_where_string, $this->_keys[self::FLAG_AND]. $this->_keys[self::FLAG_OR]. ' ') : '';
-        $_where_string = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . str_replace(
-                [$this->_keys[self::FLAG_AND], $this->_keys[self::FLAG_OR], ' '], '', $_where_string
+
+        $_where_string  = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . rtrim(
+                $_where_string, $this->_keys[self::FLAG_AND] . $this->_keys[self::FLAG_OR] . ' '
             ) : '';
 
         $_group_string  = $_group_string ? ' ' . $this->_keys[self::FLAG_GROUP] . ' ' . trim($_group_string, ', ') : '';

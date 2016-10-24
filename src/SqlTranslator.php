@@ -86,6 +86,7 @@ class SqlTranslator extends DatabaseAbstract
             case 'select' :
             case 'select_oracle' :
             case 'delete' :
+            case 'expr' :
                 $instance = Loader::Instance('>\\SqlTranslator\\Plugin\\' . ucfirst($method));
                 break;
         }
@@ -130,8 +131,12 @@ abstract class DatabaseAbstract
      */
     protected function wrap($columns)
     {
-        if ($columns == '*' || preg_match('/(^#?)([a-zA-Z0-9_\-\.]*)\s*\(([a-zA-Z0-9_\-]*)\)/i', $columns)) {
+        if ($columns == '*') {
             return $columns;
+        }
+        preg_match('/(^#)(.+)/s', $columns, $match);
+        if ($match[1]) {
+            return $match[2];
         }
 
         return '`' . $columns . '`';
