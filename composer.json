@@ -1,7 +1,7 @@
 {
     "name": "sqltranslator/sql-translator",
     "type": "library",
-    "description": "Data Model + SQL Maker",
+    "description": "Data Model, SQL Maker",
     "keywords": ["sql", "create"],
     "license": "BSD-2-Clause",
     "authors": [
@@ -21,7 +21,7 @@
     },
     "extra": {
       "branch-alias": {
-          "dev-master": "1.6"
+          "dev-master": "1.6-dev"
       }
     }
 }
