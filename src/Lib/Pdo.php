@@ -91,7 +91,7 @@ class Pdo_instance extends \PDO implements DIDatabase
     {
         try {
             parent::__construct($dsn, $user, $pass, $options);
-        } catch(DatabaseException $e) {
+        } catch(\PDOException $e) {
             throw new DatabaseException(DEBUG ? $e->getMessage() : 'create_db_connection_failed');
         }
     }
@@ -151,8 +151,8 @@ class Pdo_instance extends \PDO implements DIDatabase
                 $trace->N('db_query', 1);
             }
             return $smt;
-        } catch(DatabaseException $e) {
-            throw new DatabaseException(DEBUG ? $e->getMessage() : 'database_query_failed');
+        } catch(\PDOException $e) {
+            throw new DatabaseException(DEBUG ? $e->getMessage() . '  SQL['. $sql .']' : 'database_query_failed');
         }
     }
 

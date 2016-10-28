@@ -15,7 +15,7 @@ class SqlTranslator extends DatabaseAbstract
      * @param integer $count 总数据量
      * @return integer
      */
-    public function offset($pager, $page, $count = 0, &$maxpage)
+    public function offset($pager, $page, $count = 0)
     {
         if ($count) {
             $maxpage = ceil($count / $pager);
@@ -36,7 +36,7 @@ class SqlTranslator extends DatabaseAbstract
      * @param boolean $and 是否反取
      * @return object
      */
-    public function quoteId($col, $value, $intval = true, $filter = true, $and = true)
+    public function quoteId($col, $value, $intval = true, $filter = false, $and = true)
     {
         if (is_array($value)) {
             $value = array_map($intval ? 'intval' : 'trim', $value);
