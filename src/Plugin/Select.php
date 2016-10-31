@@ -351,15 +351,17 @@ class Select extends SqlTranslator
                     }
                     $_tmp_tabs = trim($_tmp_tabs, ', ');
                     $_tmp_join .= $this->_keys[$_flag] . ' ' . $_tmp_tabs . ' ' . $this->_keys[self::FLAG_ON] . ' ' . $_cond . ' ';
-                    foreach ($_columns as $k => $v) {
-                        if (!preg_match('/.*?\(.*?\)/', $_columns[$k])) {
-                            $_other_name && $_columns[$k] = $_other_name . '.' . $this->wrap($v);
+                    if ($_columns) {
+                        foreach ($_columns as $k => $v) {
+                            if (!preg_match('/.*?\(.*?\)/', $_columns[$k])) {
+                                $_other_name && $_columns[$k] = $_other_name . '.' . $this->wrap($v);
+                            }
+                            if (!is_integer($k)) {
+                                $_columns[$k] = $_columns[$k] . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
+                            }
                         }
-                        if (!is_integer($k)) {
-                            $_columns[$k] = $_columns[$k] . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
-                        }
+                        $_tmp_cols = implode(', ', $_columns) . ', ';
                     }
-                    $_tmp_cols = implode(', ', $_columns) . ', ';
                     if (trim($_tmp_cols, ', ')) {
                         $_select_string .= $_tmp_cols;
                     }
