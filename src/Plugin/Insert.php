@@ -10,6 +10,8 @@ class Insert extends SqlTranslator
 
     const FLAG_VALUES = 'values';
 
+    const FLAG_DUPLICATE = 'ON DUPLICATE KEY UPDATE';
+
     /**
      * 语句组成部分初始值
      *
@@ -26,7 +28,8 @@ class Insert extends SqlTranslator
      */
     private $_keys = [
         self::FLAG_INSERT => 'INSERT INTO',
-        self::FLAG_VALUES => 'VALUES'
+        self::FLAG_VALUES => 'VALUES',
+        self::FLAG_DUPLICATE => 'DUPLICATE',
     ];
 
     /**
@@ -55,7 +58,8 @@ class Insert extends SqlTranslator
     {
         $this->_parts = [
             self::FLAG_INSERT => [],
-            self::FLAG_VALUES => []
+            self::FLAG_VALUES => [],
+            self::FLAG_DUPLICATE => []
         ];
 
         return $this;
@@ -92,12 +96,26 @@ class Insert extends SqlTranslator
      * 要插入的数据
      *
      * @access public
-     * @param array $table 要插入的表
+     * @param array $values 内容
      * @return object
      */
-    function values($values = [])
+    function values(array $values)
     {
         $this->_parts[self::FLAG_VALUES][] = (array)$values;
+
+        return $this;
+    }
+
+    /**
+     * 插入失败时更新
+     *
+     * @access public
+     * @param array $values 要修改的数据
+     * @return object
+     */
+    function duplicate(array $values)
+    {
+        $this->_parts[self::FLAG_DUPLICATE] = $values;
 
         return $this;
     }
@@ -111,7 +129,7 @@ class Insert extends SqlTranslator
     private function _toString()
     {
 
-        $_insert_value = $_insert_fields = [];
+        $_insert_value = $_insert_fields = $_insert_duplicate = [];
         $this->_sql    = '';
         if ($this->_parts[self::FLAG_INSERT]) {
             foreach ($this->_parts[self::FLAG_INSERT] as $k => &$v) {
@@ -131,6 +149,13 @@ class Insert extends SqlTranslator
             }
         }
 
+        if ($_duplicate = $this->_parts[self::FLAG_DUPLICATE]) {
+            foreach ($_duplicate as $k => $v) {
+                $_insert_duplicate[] = $k .'='. (gettype ($v) === 'integer' ? $k . ($v > 0 ? '+' : '-') . abs($v) : '\'' . $v . '\'');
+            }
+        }
+
+
         if ($this->_table && $_insert_fields && $_insert_value) {
             $this->_sql .= $this->_keys[self::FLAG_INSERT] . ' ' . $this->wrap(
                     $this->_table
@@ -143,12 +168,14 @@ class Insert extends SqlTranslator
                 }
                 $this->_sql .= implode(' union ', $_insert_value);
             }
+            if ($_insert_duplicate) {
+                $this->_sql .= ' '.self::FLAG_DUPLICATE . ' ' . implode(', ', $_insert_duplicate);
+            }
         }
 
         return $this->_init();
 
     }
-
 
     /**
      * 字符串输出

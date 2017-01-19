@@ -13,13 +13,14 @@ class SqlTranslator extends DatabaseAbstract
      * @param integer $pager 每页显示数据量
      * @param integer $page 当前页数
      * @param integer $count 总数据量
+     * @param boolean $lockpage 锁定最大页数
      * @return integer
      */
-    public function offset($pager, $page, $count = 0)
+    public function offset($pager, $page, $count = 0, $lockpage = true)
     {
         if ($count) {
             $maxpage = ceil($count / $pager);
-            $page > $maxpage && $page = $maxpage;
+            $lockpage && $page > $maxpage && $page = $maxpage;
         }
 
         return $pager * ($page > 0 ? $page - 1 : 0);
@@ -135,7 +136,7 @@ abstract class DatabaseAbstract
             return $columns;
         }
         preg_match('/(^#)(.+)/s', $columns, $match);
-        if ($match[1]) {
+        if (array_key_exists(1, $match) && $match[1]) {
             return $match[2];
         }
 

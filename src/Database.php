@@ -93,7 +93,7 @@ class Database
      * @access protected
      * @var int
      */
-    protected $_encoding = 'utf8';
+    protected $_encoding = 'utf8mb4';
 
     /**
      * 数据库实例
@@ -107,6 +107,7 @@ class Database
         if ($config) {
             $this->_config = $config;
         }
+
         return $this;
 
     }

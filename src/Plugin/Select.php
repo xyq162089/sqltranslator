@@ -317,6 +317,8 @@ class Select extends SqlTranslator
                         } else {
                             if ($_other_name  && strpos($v, trim($_other_name, '`').'.') !== 0 && !preg_match('/\w+\(.*?\)/', $v)) {
                                 $val[1][$k] = $_other_name . '.' . $this->wrap($v);
+                            } elseif ($_other_name  && strpos($v, trim($_other_name, '`').'.') === 0) {
+                                $val[1][$k] = $_other_name . '.' . $this->wrap(str_replace( (trim($_other_name, '`').'.'),'', $v));
                             }
                         }
                     }
@@ -357,7 +359,7 @@ class Select extends SqlTranslator
                                 $_other_name && $_columns[$k] = $_other_name . '.' . $this->wrap($v);
                             }
                             if (!is_integer($k)) {
-                                $_columns[$k] = $_columns[$k] . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
+                                $_columns[$k] = $this->wrap($_columns[$k]) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
                             }
                         }
                         $_tmp_cols = implode(', ', $_columns) . ', ';
