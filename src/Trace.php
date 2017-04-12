@@ -44,6 +44,20 @@ class Trace
      */
     private static $_trace = [];
 
+
+    /**
+     * 初始化内存调用信息
+     *
+     * @access public
+     * @param string $flag
+     * @param mixed $data
+     * @return bool
+     */
+    public function init()
+    {
+        $this->_startUseMems = memory_get_usage();
+    }
+
     /**
      * 设置跟踪信息
      *
@@ -69,11 +83,6 @@ class Trace
     public static function Get($flag = null)
     {
         return is_null($flag) ? self::$_trace : self::$_trace[$flag];
-    }
-
-    public function init()
-    {
-        $this->_startUseMems = memory_get_usage();
     }
 
     /**

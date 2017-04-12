@@ -44,6 +44,7 @@ class Select extends SqlTranslator
 
     const FLAG_OFFSET = 'offset';
 
+    const FLAG_LOCK = 'for update';
     /**
      * 语句组成部分初始值
      *
@@ -76,7 +77,8 @@ class Select extends SqlTranslator
         self::FLAG_GROUP => 'GROUP BY',
         self::FLAG_HAVING => 'HAVING',
         self::FLAG_LIMIT => 'LIMIT',
-        self::FLAG_OFFSET => 'OFFSET'
+        self::FLAG_OFFSET => 'OFFSET',
+        self::FLAG_LOCK => 'FOR UPDATE'
     ];
 
     /**
@@ -258,6 +260,17 @@ class Select extends SqlTranslator
     {
         return $this->_join($table, $cond, $fetch, self::FLAG_JOIN_RIGHT);
     }
+    
+    /**
+     * 行锁
+     * @return object
+     */
+    function lock()
+    {
+        $this->_parts[self::FLAG_LOCK][] = true;
+
+        return $this;
+    }
 
     /**
      * 添加联接
@@ -423,6 +436,10 @@ class Select extends SqlTranslator
             }
         }
 
+        if ($this->_parts[self::FLAG_LOCK]) {
+            $_lock_string = ' ' . $this->_keys[self::FLAG_LOCK];
+        }
+
         $_select_string = $_select_string ? $this->_keys[self::FLAG_SELECT] . ' ' . trim($_select_string, ', ') : '';
         $_from_string   = $_from_string ? ' ' . $this->_keys[self::FLAG_FROM] . ' ' . trim($_from_string, ', ') : '';
         $_join_string   = $_join_string ? ' ' . trim($_join_string) : '';
@@ -439,7 +456,7 @@ class Select extends SqlTranslator
         $_limit_string  = $_limit_string ? ' ' . $this->_keys[self::FLAG_LIMIT] . ' ' . $_limit_string : '';
 
         if ($_select_string) {
-            $this->_sql .= $_select_string . $_from_string . $_join_string . $_where_string . $_group_string . $_having_string . $_order_string . $_limit_string;
+            $this->_sql .= $_select_string . $_from_string . $_join_string . $_where_string . $_group_string . $_having_string . $_order_string . $_limit_string . $_lock_string;
         }
 
         return $this->_init();

@@ -264,9 +264,9 @@ class SelectOracle extends SqlTranslator
 
     /**
      * 行锁
-     * @return BPlugin_database_oracleSelect
+     * @return object
      */
-    function forupdate()
+    function lock()
     {
         $this->_parts[self::FLAG_LOCK][] = true;
 
