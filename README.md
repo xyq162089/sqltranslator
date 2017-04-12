@@ -7,7 +7,7 @@
 + 2016-10-18 引入PDO，完善功能。
 + 2016-10-19 配置文件外部导入。
 + 2017-01-19 查询字段格式统一，新增插入唯一时更新功能
-
++ 2017-04-11 新增行锁接口
 --
 
 #调用方式
@@ -19,9 +19,35 @@ $model = (new \SqlTranslator\Database())->config('mysql://root:#PWD@127.0.0.1:33
 $sql = $model->select()
                 ->from(['a' => 'jst_book'], ['id', 'a.name', 'n' => '#NOW()'])
                 ->joinLeft(['b' => 'jst_book_detail'], 'a.id = b.id', ['b.detail', 'b.cconte', 's' => '#NOW()'])
-                ->where('a.id=1');
+                ->where('a.id=1')->lock();
 $result = $model->fetchAll($sql);
 
+var_dump($result);exit;
+exit;
+
+```
+-----------------
+
+
+###开启事务
+```php
+
+$model = (new \SqlTranslator\Database())->config('mysql://root:#PWD@127.0.0.1:3306/demo')->pick('pdo');
+$translator = new \SqlTranslator\SqlTranslator();
+try {
+  $model->beginTransaction();
+  $sql = $model->select()
+                  ->from(['a' => 'jst_book'], ['id', 'a.name', 'n' => '#NOW()'])
+                  ->joinLeft(['b' => 'jst_book_detail'], 'a.id = b.id', ['b.detail', 'b.cconte', 's' => '#NOW()'])
+                  ->where('a.id=1')->lock();
+  $result = $model->fetchAll($sql);
+  $model->commit();
+  return $oid;
+} catch (\Exception $e) {
+    $model->rollBack();
+
+    return false;
+}
 var_dump($result);exit;
 exit;
 
