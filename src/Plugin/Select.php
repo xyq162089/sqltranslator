@@ -260,7 +260,7 @@ class Select extends SqlTranslator
     {
         return $this->_join($table, $cond, $fetch, self::FLAG_JOIN_RIGHT);
     }
-    
+
     /**
      * 行锁
      * @return object
@@ -436,7 +436,8 @@ class Select extends SqlTranslator
             }
         }
 
-        if ($this->_parts[self::FLAG_LOCK]) {
+        $_lock_string = '';
+        if ( array_key_exists(self::FLAG_LOCK, $this->_parts) && $this->_parts[self::FLAG_LOCK]) {
             $_lock_string = ' ' . $this->_keys[self::FLAG_LOCK];
         }
 

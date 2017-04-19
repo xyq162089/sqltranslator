@@ -27,7 +27,7 @@ class Pdo extends Database
         );
         $dsn = "{$this->_type}:host={$this->_host};port={$this->_port};dbname={$this->_name}";
         $instance = new Pdo_instance($dsn, $this->_user, $this->_pass, $options);
-		return $instance->encoding($this->_encoding)->setNames();
+		return $instance;
 	}
 
 }

@@ -113,6 +113,22 @@ class Database
     }
 
     /**
+     * 存/取数据库编码设置
+     *
+     * @access public
+     * @param string $encoding
+     * @return mixed
+     */
+    function encoding($encoding = null)
+    {
+        if (is_null($encoding)) {
+            return $this->_encoding;
+        }
+        $this->_encoding = $encoding;
+        return $this;
+    }
+
+    /**
      * 取得已设置的数据库连接对象实例
      *
      * @access public
@@ -140,7 +156,7 @@ class Database
     {
         if ($class = Loader::Instance('>\\SqlTranslator\\Lib\\' . ucfirst($database))) {
             if ($instance = $class->connect($this->_config)) {
-                return $instance;
+                return $instance->encoding($this->encoding())->setNames();
             }
         }
 
