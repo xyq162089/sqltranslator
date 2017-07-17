@@ -27,7 +27,7 @@ class Pdo extends Database
         );
         $dsn = "{$this->_type}:host={$this->_host};port={$this->_port};dbname={$this->_name}";
         $instance = new Pdo_instance($dsn, $this->_user, $this->_pass, $options);
-		return $instance;
+		return $instance->encoding($this->_encoding)->setNames();
 	}
 
 }
@@ -44,6 +44,16 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @var object
      */
     static $_cache_proxy = null;
+
+
+    /**
+     * 是否在进行事务处理
+     *
+     * @access private
+     * @staticvar
+     * @var boolean
+     */
+    private static $_begin_action = false;
 
     /**
     * 数据库取值方式
@@ -122,6 +132,60 @@ class Pdo_instance extends \PDO implements DIDatabase
     {
         $this->query("set names '{$this->_encoding}'");
         return $this;
+    }
+
+
+    /**
+     * 开始事务处理
+     *
+     * @access public
+     * @return bool
+     */
+    function beginTransaction()
+    {
+        if (self::$_begin_action) {
+            throw new DatabaseException('call_transaction_irregular');
+        }
+        self::$_begin_action = true;
+
+        return parent::beginTransaction();
+
+    }
+
+    /**
+     * 提交当前事务
+     *
+     * @access public
+     * @return bool
+     */
+    function commit()
+    {
+        if (!self::$_begin_action) {
+            throw new DatabaseException('commit_transaction_no_started');
+        }
+
+        self::$_begin_action = false;
+        return parent::commit();
+    }
+
+    /**
+     * 回滚当前事务
+     *
+     * @access public
+     * @return bool
+     */
+    function rollback()
+    {
+        if (!self::$_begin_action) {
+            throw new DatabaseException('rollback_transaction_no_started');
+        }
+        self::$_begin_action = false;
+        return parent::rollback();
+    }
+
+    function isTransaction()
+    {
+        return self::$_begin_action;
     }
 
     /**
