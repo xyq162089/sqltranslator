@@ -13,15 +13,9 @@
     "require": {
         "php": ">=5.4.0"
     },
-    "version": "1.0.0",
     "autoload": {
         "psr-4": {
             "SqlTranslator\\": "src/"
         }
-    },
-    "extra": {
-      "branch-alias": {
-          "dev-master": "1.6-dev"
-      }
     }
 }
