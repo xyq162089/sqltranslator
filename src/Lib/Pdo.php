@@ -12,23 +12,25 @@ use SqlTranslator\DatabaseException;
 class Pdo extends Database
 {
 
-	/**
-	 * 连接数据库
-	 * @param string $config
-	 * @access public
-	 * @return object
-	 */
-	function connect($config)
-	{
-		parent::AnalyseConnect($config);
-        $options = array(
-            \PDO::ATTR_ERRMODE       => \PDO::ERRMODE_EXCEPTION,
-            \PDO::ATTR_ORACLE_NULLS  => \PDO::NULL_EMPTY_STRING,
-        );
-        $dsn = "{$this->_type}:host={$this->_host};port={$this->_port};dbname={$this->_name}";
+    /**
+     * 连接数据库
+     * @param string $config
+     * @access public
+     * @return object
+     */
+    public function connect($config)
+    {
+        parent::AnalyseConnect($config);
+        $options  = [
+            \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+            \PDO::ATTR_ORACLE_NULLS => \PDO::NULL_EMPTY_STRING,
+        ];
+        $dsn      = "{$this->_type}:host={$this->_host};port={$this->_port};dbname={$this->_name}";
         $instance = new Pdo_instance($dsn, $this->_user, $this->_pass, $options);
-		return $instance->encoding($this->_encoding)->setNames();
-	}
+
+        return $instance->encoding(self::$_encoding)
+                        ->setNames();
+    }
 
 }
 
@@ -56,11 +58,11 @@ class Pdo_instance extends \PDO implements DIDatabase
     private static $_begin_action = false;
 
     /**
-    * 数据库取值方式
-    *
-    * @access private
-    * @var string
-    */
+     * 数据库取值方式
+     *
+     * @access private
+     * @var string
+     */
     private $_fetchMode = \PDO::FETCH_ASSOC;
 
     /**
@@ -69,11 +71,11 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access private
      * @var array
      */
-    private $_fetch_modes = array(
-        Database::FETCH_BOTH=> \PDO::FETCH_BOTH,
-        Database::FETCH_ASSOC=> \PDO::FETCH_ASSOC,
-        Database::FETCH_NUM=> \PDO::FETCH_NUM,
-    );
+    private $_fetch_modes = [
+        Database::FETCH_BOTH => \PDO::FETCH_BOTH,
+        Database::FETCH_ASSOC => \PDO::FETCH_ASSOC,
+        Database::FETCH_NUM => \PDO::FETCH_NUM,
+    ];
 
     /**
      * SQL语句执行后影响到的行数
@@ -97,11 +99,11 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return null
      */
-    function __construct($dsn, $user, $pass, $options = array())
+    public function __construct($dsn, $user, $pass, $options = [])
     {
         try {
             parent::__construct($dsn, $user, $pass, $options);
-        } catch(\PDOException $e) {
+        } catch (\PDOException $e) {
             throw new DatabaseException(DEBUG ? $e->getMessage() : 'create_db_connection_failed');
         }
     }
@@ -113,12 +115,13 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $encoding
      * @return mixed
      */
-    function encoding($encoding = null)
+    public function encoding($encoding = null)
     {
         if (is_null($encoding)) {
             return $this->_encoding;
         }
         $this->_encoding = $encoding;
+
         return $this;
     }
 
@@ -128,9 +131,10 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return object
      */
-    function setNames()
+    public function setNames()
     {
         $this->query("set names '{$this->_encoding}'");
+
         return $this;
     }
 
@@ -141,7 +145,7 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return bool
      */
-    function beginTransaction()
+    public function beginTransaction()
     {
         if (self::$_begin_action) {
             throw new DatabaseException('call_transaction_irregular');
@@ -158,13 +162,14 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return bool
      */
-    function commit()
+    public function commit()
     {
         if (!self::$_begin_action) {
             throw new DatabaseException('commit_transaction_no_started');
         }
 
         self::$_begin_action = false;
+
         return parent::commit();
     }
 
@@ -174,16 +179,17 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return bool
      */
-    function rollback()
+    public function rollback()
     {
         if (!self::$_begin_action) {
             throw new DatabaseException('rollback_transaction_no_started');
         }
         self::$_begin_action = false;
+
         return parent::rollback();
     }
 
-    function isTransaction()
+    public function isTransaction()
     {
         return self::$_begin_action;
     }
@@ -197,7 +203,6 @@ class Pdo_instance extends \PDO implements DIDatabase
     private function _query($sql)
     {
         try {
-
             $trace = new Trace();
             $trace->time('SqlQueryStartTime');
 
@@ -214,9 +219,10 @@ class Pdo_instance extends \PDO implements DIDatabase
                 $trace->N('db_query_time', $queryTime);
                 $trace->N('db_query', 1);
             }
+
             return $smt;
-        } catch(\PDOException $e) {
-            throw new DatabaseException(DEBUG ? $e->getMessage() . '  SQL['. $sql .']' : 'database_query_failed');
+        } catch (\PDOException $e) {
+            throw new DatabaseException(DEBUG ? $e->getMessage() . '  SQL[' . $sql . ']' : 'database_query_failed');
         }
     }
 
@@ -227,9 +233,10 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function fetchAll($sql)
+    public function fetchAll($sql)
     {
-        return $this->_query($sql)->fetchAll($this->_fetchMode);
+        return $this->_query($sql)
+                    ->fetchAll($this->_fetchMode);
     }
 
     /**
@@ -239,9 +246,10 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function fetch($sql)
+    public function fetch($sql)
     {
-        return $this->_query($sql)->fetch($this->_fetchMode);
+        return $this->_query($sql)
+                    ->fetch($this->_fetchMode);
     }
 
     /**
@@ -251,9 +259,10 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function fetchOne($sql)
+    public function fetchOne($sql)
     {
-        return $this->_query($sql)->fetchColumn(0);
+        return $this->_query($sql)
+                    ->fetchColumn(0);
     }
 
     /**
@@ -263,9 +272,10 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $sql
      * @return int
      */
-    function query($sql)
+    public function query($sql)
     {
-        return $this->_query($sql)->rowCount();
+        return $this->_query($sql)
+                    ->rowCount();
     }
 
     /**
@@ -275,7 +285,7 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $seq
      * @return integer
      */
-    function lastIsertId($seq = null)
+    public function lastIsertId($seq = null)
     {
         return parent::lastInsertId($seq);
     }
@@ -286,7 +296,7 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return integer
      */
-    function rowCount()
+    public function rowCount()
     {
         return self::$_rowcount;
     }
@@ -298,7 +308,7 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param string $fetchMode
      * @return string/void
      */
-    function fetchMode($mode = null)
+    public function fetchMode($mode = null)
     {
         if (is_null($mode)) {
             return $this->_fetchMode;
@@ -306,6 +316,7 @@ class Pdo_instance extends \PDO implements DIDatabase
             throw new DatabaseException('mode_unsupported');
         }
         $this->_fetchMode = $this->_fetch_modes[$mode];
+
         return $this;
     }
 
@@ -316,7 +327,7 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @param int $expire
      * @return object
      */
-    function cache($expire = 86400)
+    public function cache($expire = 86400)
     {
         return '';
     }
@@ -327,9 +338,9 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return object
      */
-    function select()
+    public function select()
     {
-    	return Loader::Instance('>\\SqlTranslator\\Plugin\\Select');
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Select');
     }
 
     /**
@@ -338,9 +349,9 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return object
      */
-    function delete()
+    public function delete()
     {
-    	return Loader::Instance('>\\SqlTranslator\\Plugin\\Delete');
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Delete');
     }
 
     /**
@@ -349,9 +360,9 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return object
      */
-    function insert()
+    public function insert()
     {
-    	return Loader::Instance('>\\SqlTranslator\\Plugin\\Insert');
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Insert');
     }
 
     /**
@@ -360,9 +371,9 @@ class Pdo_instance extends \PDO implements DIDatabase
      * @access public
      * @return object
      */
-    function update()
+    public function update()
     {
-    	return Loader::Instance('>\\SqlTranslator\\Plugin\\Update');
+        return Loader::Instance('>\\SqlTranslator\\Plugin\\Update');
     }
 
 }
