@@ -11,6 +11,7 @@ use MongoDB\Driver\Query;
 use MongoDB\Driver\BulkWrite;
 use MongoDB\Driver\WriteConcern;
 use MongoDB\Driver\BulkWriteException;
+use MongoDB\Driver\Command;
 use SqlTranslator\DatabaseException;
 
 class Mongodb extends NoSql
@@ -120,11 +121,23 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @param string $sql
      * @return object
      */
-    private function _query($sql)
+    private function _query($sql, $options = [])
     {
-        $options = [];
-
         return new Query($sql, $options);
+    }
+
+    /**
+     * mongodb 执行命令
+     *
+     * @param string $sql
+     * @return object
+     */
+    private function _command($sql)
+    {
+        $cmd = new Command($sql);
+        $rows = $this->_instance->executeCommand($this->_db,  $cmd)->toArray();
+
+        return $rows;
     }
 
     /**
@@ -175,9 +188,9 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @param string $sql
      * @return mixed
      */
-    public function fetchAll($sql)
+    public function fetchAll($sql, $options = [])
     {
-        return $this->fetch($sql);
+        return $this->fetch($sql, $options);
     }
 
     /**
@@ -187,9 +200,9 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @param array $sql
      * @return mixed
      */
-    public function fetch($sql)
+    public function fetch($sql, $options = [])
     {
-        $rows = $this->_instance->executeQuery($this->selectCollection(), $this->_query($sql))
+        $rows = $this->_instance->executeQuery($this->selectCollection(), $this->_query($sql, $options))
                                 ->toArray();
 
         return $rows;
@@ -216,6 +229,22 @@ class Mongodb_instance implements DIDatabaseNoSql
      */
     public function query($sql)
     {
+        return $this->_command($sql);
+    }
+
+    /**
+     * delete助手
+     *
+     * @param array $filter
+     * @access public
+     * @return object
+     */
+    public function count($filter)
+    {
+        $bulk = new BulkWrite;
+        $bulk->count($filter);
+
+        return $this->_executeBulkWrite($bulk)->getDeletedCount();
     }
 
     /**
