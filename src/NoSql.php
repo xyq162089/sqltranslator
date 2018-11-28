@@ -223,7 +223,7 @@ interface DIDatabaseNoSql
      * 设置或读取当前数据取值模式
      *
      * @access public
-     * @param string $fetchMode
+     * @param string $mode
      * @return string/void
      */
     public function fetchMode($mode = null);
@@ -253,5 +253,13 @@ interface DIDatabaseNoSql
      * @return object
      */
     public function update($filter, $data);
+
+    /**
+     * 聚合操作助手
+     * @param $pipelines
+     * @param array $options
+     * @return mixed
+     */
+    public function aggregate($pipelines, $options = []);
 
 }

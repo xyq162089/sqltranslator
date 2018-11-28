@@ -101,7 +101,6 @@ class Mongodb_instance implements DIDatabaseNoSql
             $this->_collection = $collection;
 
         }
-
         return $this;
     }
 
@@ -113,6 +112,15 @@ class Mongodb_instance implements DIDatabaseNoSql
     public function selectCollection()
     {
         return $this->_db . '.' . $this->_collection;
+    }
+
+    /**
+     * 选择集合
+     * @return \MongoCollection
+     */
+    public function collection()
+    {
+        return $this->_collection;
     }
 
     /**
@@ -292,6 +300,47 @@ class Mongodb_instance implements DIDatabaseNoSql
 
         return $this->_executeBulkWrite($bulk)->getModifiedCount();
     }
+
+    /**
+     * 聚合查询
+     * @param $pipelines
+     * @param array $options
+     * @return array
+     */
+    public function aggregate($pipelines, $options = [])
+    {
+        if (!is_array($pipelines)) {
+            return [];
+        }
+
+        $document = array_merge(
+            [
+                'aggregate' => $this->collection(),
+                'pipeline' => $pipelines,
+                'allowDiskUse' => false,
+            ], $options
+        );
+
+        $cursor = $this->_command($document);
+
+        if (empty($cursor)) {
+            return [];
+        }
+
+        $rows = [];
+
+        // 整理格式
+        foreach ($cursor[0]->result as $key => $item) {
+            $item = json_decode(json_encode($item,true),TRUE);
+            $item['_id'] = isset($item['_id']['$oid']) ? $item['_id']['$oid'] : $item['_id'];
+            $rows[$key] = $item;
+        }
+
+        return $rows;
+
+
+    }
+
 
     /**
      * 设置或读取当前数据取值模式
