@@ -313,30 +313,36 @@ class Mongodb_instance implements DIDatabaseNoSql
             return [];
         }
 
-        $document = array_merge(
-            [
-                'aggregate' => $this->collection(),
-                'pipeline' => $pipelines,
-                'allowDiskUse' => false,
-            ], $options
-        );
+        try {
 
-        $cursor = $this->_command($document);
+            $document = array_merge(
+                [
+                    'aggregate' => $this->collection(),
+                    'pipeline' => $pipelines,
+                    'allowDiskUse' => false,
+                ], $options
+            );
 
-        if (empty($cursor)) {
-            return [];
+            $cursor = $this->_command($document);
+
+            if (empty($cursor)) {
+                return [];
+            }
+
+            $rows = [];
+
+            // 整理格式
+            foreach ($cursor[0]->result as $key => $item) {
+                $item = json_decode(json_encode($item, true), TRUE);
+                $item['_id'] = isset($item['_id']['$oid']) ? $item['_id']['$oid'] : $item['_id'];
+                $rows[$key] = $item;
+            }
+
+            return $rows;
+        } catch (\Exception $e) {
+            printf("Other error: %s\n", $e->getMessage());
+            exit;
         }
-
-        $rows = [];
-
-        // 整理格式
-        foreach ($cursor[0]->result as $key => $item) {
-            $item = json_decode(json_encode($item,true),TRUE);
-            $item['_id'] = isset($item['_id']['$oid']) ? $item['_id']['$oid'] : $item['_id'];
-            $rows[$key] = $item;
-        }
-
-        return $rows;
 
 
     }
