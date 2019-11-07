@@ -201,6 +201,8 @@ class NoSql
 //数据库引擎接口
 interface DIDatabaseNoSql
 {
+
+    public function getSession();
     /**
      * 获取当行数据
      *
@@ -236,6 +238,23 @@ interface DIDatabaseNoSql
     public function delete($filter);
 
     /**
+     * 删除(物理删除,事务)
+     * @param $where
+     * @param null $session
+     * @return mixed
+     */
+    public function deleteTransaction($where,$session= null);
+
+    /**
+     * 删除(逻辑删除,事务)
+     * @param $where
+     * @param $update
+     * @param null $session
+     * @return mixed
+     */
+    public function delTransaction($where,$update,$session=null);
+
+    /**
      * 插入操作助手
      *
      * @param $data
@@ -243,6 +262,22 @@ interface DIDatabaseNoSql
      * @return object
      */
     public function insert($data);
+
+    /**
+     * 插入数据（事务）
+     * @param $data
+     * @param null $session
+     * @return mixed
+     */
+    public function insertTransaction($data,$session = null);
+
+    /**
+     * 批量插入(事务)
+     * @param $data
+     * @param null $session
+     * @return mixed
+     */
+    public function batchInsertTransaction($data,$session = null);
 
     /**
      * 更新操作助手
@@ -253,6 +288,15 @@ interface DIDatabaseNoSql
      * @return object
      */
     public function update($filter, $data);
+
+    /**
+     * 更新（事务）
+     * @param $where
+     * @param $update
+     * @param null $session
+     * @return mixed
+     */
+    public function modifyTransaction($where,$update,$session = null);
 
     /**
      * 聚合操作助手
