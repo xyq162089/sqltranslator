@@ -16,7 +16,7 @@ class Mysql extends Database
      * @return Mysql_instance
      * @throws DatabaseException
      */
-    function connect($config)
+    public function connect($config)
     {
         parent::AnalyseConnect($config);
         if (function_exists('mysql_connect')) {
@@ -30,7 +30,7 @@ class Mysql extends Database
 
 }
 
-class Mysql_instance implements \SqlTranslator\DIDatabase
+class Mysql_instance implements DIDatabase
 {
 
     /**
@@ -102,7 +102,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return null
      */
-    function __construct($host, $port, $user, $pass, $name)
+    public function __construct($host, $port, $user, $pass, $name)
     {
         $this->_instance = @mysql_connect($host . ':' . $port, $user, $pass, true);
         @mysql_select_db($name, $this->_instance);
@@ -116,7 +116,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $encoding
      * @return mixed
      */
-    function encoding($encoding = null)
+    public function encoding($encoding = null)
     {
         if (is_null($encoding)) {
             return $this->_encoding;
@@ -132,7 +132,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return object
      */
-    function setNames()
+    public function setNames()
     {
         $this->query("set names '{$this->_encoding}'");
 
@@ -146,7 +146,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function _query($sql)
+    public function _query($sql)
     {
         $trace = new Trace();
         $trace->time('SqlQueryStartTime');
@@ -175,7 +175,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $sql
      * @return int
      */
-    function query($sql)
+    public function query($sql)
     {
         $this->_query($sql);
 
@@ -189,7 +189,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $sql
      * @return array
      */
-    function fetchAll($sql)
+    public function fetchAll($sql)
     {
         $resource = $this->_query($sql);
         $result   = [];
@@ -207,7 +207,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function fetchOne($sql)
+    public function fetchOne($sql)
     {
         $resource = $this->_query($sql);
         $result   = @mysql_fetch_row($resource);
@@ -222,7 +222,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $sql
      * @return mixed
      */
-    function fetch($sql)
+    public function fetch($sql)
     {
         $resource = $this->_query($sql);
         switch ($this->_fetchMode) {
@@ -242,7 +242,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param string $seq
      * @return integer
      */
-    function lastInsertId($seq = null)
+    public function lastInsertId($seq = null)
     {
         return @mysql_insert_id();
     }
@@ -253,7 +253,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return integer
      */
-    function rowCount()
+    public function rowCount()
     {
         return self::$_rowcount;
     }
@@ -263,7 +263,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      *
      * @see BIProxy::cache()
      */
-    function cache($expire = 86400, $engine = 'memcached')
+    public function cache($expire = 86400, $engine = 'memcached')
     {
         return '';
     }
@@ -275,7 +275,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @param int $fetchMode
      * @param mixed
      */
-    function fetchMode($mode = null)
+    public function fetchMode($mode = null)
     {
         if (is_null($mode)) {
             return $this->_fetchMode;
@@ -293,7 +293,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return bool
      */
-    function beginTransaction()
+    public function beginTransaction()
     {
         if (self::$_begin_action) {
             throw new DatabaseException('call_transaction_irregular');
@@ -314,7 +314,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return bool
      */
-    function commit()
+    public function commit()
     {
         if (!self::$_begin_action) {
             throw new DatabaseException('transaction_no_started');
@@ -333,7 +333,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return bool
      */
-    function rollback()
+    public function rollback()
     {
         if (!self::$_begin_action) {
             throw new DatabaseException('transaction_no_started');
@@ -352,7 +352,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return object
      */
-    function select()
+    public function select()
     {
         return Loader::Instance('>\\SqlTranslator\\Plugin\\Select');
     }
@@ -363,7 +363,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return object
      */
-    function delete()
+    public function delete()
     {
         return Loader::Instance('>\\SqlTranslator\\Plugin\\Delete');
     }
@@ -374,7 +374,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return object
      */
-    function insert()
+    public function insert()
     {
         return Loader::Instance('>\\SqlTranslator\\Plugin\\Insert');
     }
@@ -385,7 +385,7 @@ class Mysql_instance implements \SqlTranslator\DIDatabase
      * @access public
      * @return object
      */
-    function update()
+    public function update()
     {
         return Loader::Instance('>\\SqlTranslator\\Plugin\\Update');
     }

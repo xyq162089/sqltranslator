@@ -306,7 +306,14 @@ class Select extends SqlTranslator
             foreach ($_from as $key => $val) {
                 if (is_array($val) && 2 == count($val)) {
                     $_other_name = '';
-                    list($k, $v) = each($val[0]);
+                    //list($k, $v) = each($val[0]);
+                    if (is_array($val[0])) {
+                        $k = key($val[0]);
+                        $v = current($val[0]);
+                    } else {
+                        $k = $v = $val[0];
+                    }
+
                     if (!is_integer($k)) {
                         $_tmp_tabs .= $this->wrap($v) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap(
                                 $k
@@ -328,10 +335,15 @@ class Select extends SqlTranslator
                                     );
                             }
                         } else {
-                            if ($_other_name  && strpos($v, trim($_other_name, '`').'.') !== 0 && !preg_match('/\w+\(.*?\)/', $v)) {
+                            if ($_other_name && strpos($v, trim($_other_name, '`') . '.') !== 0 && !preg_match(
+                                    '/\w+\(.*?\)/', $v
+                                )
+                            ) {
                                 $val[1][$k] = $_other_name . '.' . $this->wrap($v);
-                            } elseif ($_other_name  && strpos($v, trim($_other_name, '`').'.') === 0) {
-                                $val[1][$k] = $_other_name . '.' . $this->wrap(str_replace( (trim($_other_name, '`').'.'),'', $v));
+                            } elseif ($_other_name && strpos($v, trim($_other_name, '`') . '.') === 0) {
+                                $val[1][$k] = $_other_name . '.' . $this->wrap(
+                                        str_replace((trim($_other_name, '`') . '.'), '', $v)
+                                    );
                             }
                         }
                     }
@@ -355,7 +367,13 @@ class Select extends SqlTranslator
                     $_tmp_tabs   = '';
                     $_tmp_cols   = '';
                     $_other_name = '';
-                    list($k, $v) = each($_tables);
+                    //list($k, $v) = each($_tables);
+                    if (is_array($_tables)) {
+                        $k = key($_tables);
+                        $v = current($_tables);
+                    } else {
+                        $k = $v = $_tables;
+                    }
                     if (!is_integer($k)) {
                         $_tmp_tabs .= $this->wrap($v) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap(
                                 $k
@@ -372,7 +390,9 @@ class Select extends SqlTranslator
                                 $_other_name && $_columns[$k] = $_other_name . '.' . $this->wrap($v);
                             }
                             if (!is_integer($k)) {
-                                $_columns[$k] = $this->wrap($_columns[$k]) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
+                                $_columns[$k] = $this->wrap(
+                                        $_columns[$k]
+                                    ) . ' ' . $this->_keys[self::FLAG_AS] . ' ' . $this->wrap($k);
                             }
                         }
                         $_tmp_cols = implode(', ', $_columns) . ', ';
@@ -437,7 +457,7 @@ class Select extends SqlTranslator
         }
 
         $_lock_string = '';
-        if ( array_key_exists(self::FLAG_LOCK, $this->_parts) && $this->_parts[self::FLAG_LOCK]) {
+        if (array_key_exists(self::FLAG_LOCK, $this->_parts) && $this->_parts[self::FLAG_LOCK]) {
             $_lock_string = ' ' . $this->_keys[self::FLAG_LOCK];
         }
 
@@ -445,7 +465,7 @@ class Select extends SqlTranslator
         $_from_string   = $_from_string ? ' ' . $this->_keys[self::FLAG_FROM] . ' ' . trim($_from_string, ', ') : '';
         $_join_string   = $_join_string ? ' ' . trim($_join_string) : '';
 
-        $_where_string  = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . rtrim(
+        $_where_string = $_where_string ? ' ' . $this->_keys[self::FLAG_WHERE] . ' ' . rtrim(
                 $_where_string, $this->_keys[self::FLAG_AND] . $this->_keys[self::FLAG_OR] . ' '
             ) : '';
 

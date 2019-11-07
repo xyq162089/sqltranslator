@@ -132,14 +132,14 @@ abstract class DatabaseAbstract
      */
     protected function wrap($columns)
     {
-        if ($columns == '*') {
+        if ($columns == '*' || strpos($columns, '`') === 0) {
             return $columns;
         }
+
         preg_match('/(^#)(.+)/s', $columns, $match);
         if (array_key_exists(1, $match) && $match[1]) {
             return $match[2];
         }
-
         return '`' . $columns . '`';
     }
 

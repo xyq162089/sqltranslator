@@ -31,7 +31,7 @@ class Loader
 
     public static function getVersion()
     {
-        return '0.0.10-dev';
+        return '0.0.11-dev';
     }
 
     /**
