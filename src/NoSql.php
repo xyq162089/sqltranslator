@@ -201,8 +201,12 @@ class NoSql
 //数据库引擎接口
 interface DIDatabaseNoSql
 {
-
+    /**
+     * 开启会话
+     * @return mixed
+     */
     public function getSession();
+
     /**
      * 获取当行数据
      *
@@ -210,7 +214,16 @@ interface DIDatabaseNoSql
      * @param string $sql
      * @return array
      */
-    public function fetch($sql);
+    public function fetchOne($sql,$options = []);
+
+    /**
+     * 获取数据
+     *
+     * @access public
+     * @param string $sql
+     * @return array
+     */
+    public function fetch($sql,$options = []);
 
     /**
      * 执行一条SQL语句

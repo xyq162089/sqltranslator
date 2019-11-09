@@ -99,6 +99,62 @@ class Mongodb_instance implements DIDatabaseNoSql
     }
 
     /**
+     * 设置集合
+     * @param $collection
+     * @return
+     */
+    public function setCollection($collection)
+    {
+        if ($collection) {
+            $this->_collection = $collection;
+
+        }
+
+        return $this;
+    }
+
+    /**
+     * 选择集合
+     * @return
+     */
+    public function selectCollection()
+    {
+        return $this->_db . '.' . $this->_collection;
+    }
+
+    /**
+     * 选择集合
+     * @return
+     */
+    public function collection()
+    {
+        return $this->_collection;
+    }
+
+    /**
+     * mongodb 执行命令
+     *
+     * @param string $sql
+     * @return object
+     */
+    private function _query($sql,$options = [])
+    {
+
+        return new Query($sql, $options);
+    }
+
+    /**
+     * @param $sql
+     * @return
+     */
+    private function _command($sql,$options = [])
+    {
+        return new Command($sql,$options);
+    }
+
+
+
+    /**
      * 开启事务
      * @return \MongoDB\\Session
      * @throws
@@ -195,61 +251,6 @@ class Mongodb_instance implements DIDatabaseNoSql
     }
 
     /**
-     * 设置集合
-     * @param $collection
-     * @return \MongoCollection
-     */
-    public function setCollection($collection)
-    {
-        if ($collection) {
-            $this->_collection = $collection;
-
-        }
-
-        return $this;
-    }
-
-    /**
-     * 选择集合
-     * @return \MongoCollection
-     */
-    public function selectCollection()
-    {
-        return $this->_db . '.' . $this->_collection;
-    }
-
-    /**
-     * 选择集合
-     * @return \MongoCollection
-     */
-    public function collection()
-    {
-        return $this->_collection;
-    }
-
-    /**
-     * mongodb 执行命令
-     *
-     * @param string $sql
-     * @return object
-     */
-    private function _query($sql)
-    {
-        $options = [];
-
-        return new Query($sql, $options);
-    }
-
-    /**
-     * @param $sql
-     * @return Command
-     */
-    private function _command($sql)
-    {
-        return new  Command($sql);
-    }
-
-    /**
      * mongodb 执行命令
      *
      * @param object $bulk
@@ -296,10 +297,14 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @access public
      * @param string $sql
      * @return mixed
+     * @throws
      */
-    public function fetchAll($sql)
+    public function fetchAll($sql,$options = [])
     {
-        return $this->fetch($sql);
+        $rows = $this->_instance->executeQuery($this->selectCollection(), $this->_query($sql,$options))
+            ->toArray();
+
+        return $rows;
     }
 
     /**
@@ -310,11 +315,10 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @return mixed
      * @throws
      */
-    public function fetch($sql)
+    public function fetch($sql,$options = [])
     {
-        $rows = $this->_instance->executeQuery($this->selectCollection(), $this->_query($sql))
+        $rows = $this->_instance->executeQuery($this->selectCollection(), $this->_query($sql,$options))
                                 ->toArray();
-
         return $rows;
     }
 
@@ -325,21 +329,25 @@ class Mongodb_instance implements DIDatabaseNoSql
      * @param string $sql
      * @return mixed
      */
-    public function fetchOne($sql)
+    public function fetchOne($sql,$options = [])
     {
-        return $this->fetch($sql);
+        return $this->fetch($sql,$options);
     }
 
     /**
-     * 执行一个SQL语句
      *
-     * @access public
+     * 执行一个SQL语句
      * @param string $sql
-     * @return int
+     * @return array|int
+     * @throws
      */
     public function query($sql)
     {
+        $result = $this->_instance->executeCommand($this->_db, $this->_command($sql))->toArray();
+
+        return $result;
     }
+
 
     /**
      * delete助手
@@ -502,6 +510,8 @@ class Mongodb_instance implements DIDatabaseNoSql
         ];
 
         $ret = $this->myExecuteBulkWrite($data,'update',$session);
+
+        return $ret ? $ret : false;
     }
 
 
@@ -530,7 +540,8 @@ class Mongodb_instance implements DIDatabaseNoSql
                 'aggregate' => $this->collection(),
                 'pipeline' => $pipelines,
                 'allowDiskUse' => false,
-            ], $options
+            ],
+            $options
         );
 
         $cursor = $this->_instance->executeCommand($this->_db, $this->_command($document));
@@ -541,10 +552,7 @@ class Mongodb_instance implements DIDatabaseNoSql
 
         return $cursor->toArray();
 
-
     }
-
-
 
 
     /**
